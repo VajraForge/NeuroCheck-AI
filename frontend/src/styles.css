@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-neuro-dark text-white font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-neuro-card/60 backdrop-blur-md border border-white/10 shadow-2xl;
+  }
+  
+  .glass-btn {
+    @apply relative overflow-hidden bg-neuro-card/80 backdrop-blur-sm border border-neuro-glow/30 hover:border-neuro-glow/80 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.1)] hover:shadow-[0_0_25px_rgba(0,240,255,0.3)];
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neuro-glow to-neuro-accent;
+  }
+}
