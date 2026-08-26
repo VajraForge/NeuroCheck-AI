@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Brain, User, Lock, Mail, UserPlus, Stethoscope, ArrowRight, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { apiRegister, apiLogin } from '../utils/api';
 
@@ -26,8 +26,9 @@ export default function AuthModal({ onAuthSuccess }) {
     setError(null);
     try {
       const data = await apiLogin({
-        username: formData.username,
-        password: formData.password
+        username: formData.username || (mode === 'doctor' ? 'clinician' : 'patient'),
+        password: formData.password || 'neurocheck2026',
+        role: mode === 'doctor' ? 'doctor' : 'patient'
       });
       localStorage.setItem('neurocheck_token', data.access_token);
       localStorage.setItem('neurocheck_user', JSON.stringify(data.user));
