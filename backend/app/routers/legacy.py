@@ -139,6 +139,8 @@ def generate_care_plan(req: CarePlanRequest):
         patient_tier=req.patient_tier,
         motor_score=req.motor_score,
         acoustic_score=req.acoustic_score,
-        spiral_score=req.spiral_score
+        spiral_score=req.spiral_score,
+        details=req.details
     )
     return CarePlanResponse(care_plan_markdown=plan_md)
+

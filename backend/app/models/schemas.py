@@ -101,6 +101,8 @@ class CarePlanRequest(BaseModel):
     acoustic_score: Optional[float] = None
     spiral_score: Optional[float] = None
     patient_tier: str
+    details: Optional[Dict[str, Any]] = None
 
 class CarePlanResponse(BaseModel):
     care_plan_markdown: str
+

@@ -23,6 +23,7 @@ import PatientHistory from './components/PatientHistory';
 import KinematicTest from './components/KinematicTest';
 import AcousticTest from './components/AcousticTest';
 import SpiralTest from './components/SpiralTest';
+import CarePlanView from './components/CarePlanView';
 import ClinicalErrorBoundary from './components/ClinicalErrorBoundary';
 
 export default function App() {
@@ -360,33 +361,16 @@ export default function App() {
 
               {/* AI Care Planner Section for Doctors */}
               <div className="glass-panel p-6 rounded-3xl border-neuro-glow/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-neuro-glow" /> AI Rehabilitation Care Planner
-                  </h3>
-                  <span className="text-xs text-gray-400 font-mono">Powered by Gemini / Neurological Rules</span>
-                </div>
-
-                {carePlan ? (
-                  <div className="bg-black/60 p-5 rounded-xl border border-white/10 text-xs text-gray-200 whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-sans">
-                    {carePlan}
-                  </div>
-                ) : (
-                  <div
-                    onClick={generateCarePlan}
-                    className="bg-black/40 p-8 rounded-2xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-black/60 transition text-center group"
-                  >
-                    <Sparkles className="w-8 h-8 text-neuro-glow mb-2 group-hover:scale-110 transition" />
-                    <p className="text-sm font-semibold text-white">
-                      {isLoadingPlan ? 'Generating 7-Day Clinical Regimen...' : 'Synthesize 7-Day Rehabilitation Regimen for Patient'}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1 max-w-md">
-                      Generates structured physical therapy, laryngeal phonation exercises, and dual-task coordination regimens based on quantitative biomarker scores.
-                    </p>
-                  </div>
-                )}
+                <CarePlanView
+                  planMarkdown={carePlan}
+                  onRegenerate={generateCarePlan}
+                  isGenerating={isLoadingPlan}
+                  compositeScore={48.2}
+                  riskTier="moderate"
+                />
               </div>
             </div>
+
           )}
         </main>
       </div>

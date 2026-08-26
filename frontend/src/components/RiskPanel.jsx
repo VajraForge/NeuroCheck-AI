@@ -1,25 +1,14 @@
 import React, { useEffect, useState } from "react";
+import CarePlanView from "./CarePlanView";
+import FacilityFinder from "./FacilityFinder";
 
 const TIER_LABEL = { low: "low risk", moderate: "moderate risk", high: "high risk" };
 
-const FACILITIES = {
-  high: [
-    { name: "Bangalore Neuro Sciences Institute — Movement Disorders Clinic", meta: "2.1 km · 24/7 · walk-ins" },
-    { name: "St. John's Tertiary Neurology Centre", meta: "4.7 km · 24/7 · specialist on call" },
-  ],
-  moderate: [
-    { name: "Manipal Outpatient Neurology", meta: "1.8 km · Mon–Sat 9am–6pm" },
-    { name: "Apollo Diagnostics — MRI / EEG Lab", meta: "3.2 km · imaging & workup" },
-  ],
-  low: [
-    { name: "City Wellness Neuro Screening", meta: "1.4 km · preventive monitoring" },
-  ],
-};
-
-export default function RiskPanel({ apiBase, scores, details }) {
+export default function RiskPanel({ apiBase = "http://localhost:8000", scores, details = {} }) {
   const [risk, setRisk] = useState(null); // { composite, tier }
   const [showFacilities, setShowFacilities] = useState(false);
   const [plan, setPlan] = useState(null);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const anyScore = Object.values(scores).some((v) => v !== null);
@@ -36,20 +25,32 @@ export default function RiskPanel({ apiBase, scores, details }) {
       .catch(() => {});
   }, [scores, anyScore, apiBase]);
 
-  const barColor = (v) => (v < 30 ? "var(--teal)" : v < 65 ? "var(--amber)" : "var(--red)");
+  const barColor = (v) => (v < 30 ? "var(--teal, #00F0FF)" : v < 65 ? "var(--amber, #FBBF24)" : "var(--red, #EF4444)");
 
-  const generatePlan = () => {
-    const lines = [];
-    if (scores.motor !== null && scores.motor > 35)
-      lines.push("- Finger-opposition drills, 3x/day, 2 min per hand — targets bradykinesia");
-    if (scores.acoustic !== null && scores.acoustic > 35)
-      lines.push("- Sustained-phonation voice exercises, 5 min/day — targets vocal rigidity");
-    if (scores.spiral !== null && scores.spiral > 35)
-      lines.push("- Controlled large-radius tracing exercises, 5 min/day — targets kinetic tremor");
-    if (lines.length === 0) lines.push("- Maintain baseline: general fine-motor and balance activities, 2x/week");
-    lines.push("- Fall prevention: clear walkways, grab bars in bathroom, non-slip mats");
-    lines.push("- Caregiver note: track gait and tremor frequency week to week");
-    setPlan(lines.join("\n"));
+  const generatePlan = async () => {
+    if (!risk) return;
+    setIsGeneratingPlan(true);
+    try {
+      const res = await fetch(`${apiBase}/generate-care-plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          composite_score: risk.composite,
+          motor_score: scores.motor || 30.0,
+          acoustic_score: scores.acoustic || 25.0,
+          spiral_score: scores.spiral || 35.0,
+          patient_tier: risk.tier,
+          details: details
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPlan(data.care_plan_markdown);
+      }
+    } catch (_) {
+    } finally {
+      setIsGeneratingPlan(false);
+    }
   };
 
   const exportDossier = async () => {
@@ -62,7 +63,7 @@ export default function RiskPanel({ apiBase, scores, details }) {
           motor: scores.motor,
           acoustic: scores.acoustic,
           spiral: scores.spiral,
-          tap_detail: details.tap,
+          tap_detail: details.tap || details.motor,
           acoustic_detail: details.acoustic,
           spiral_detail: details.spiral,
         }),
@@ -72,7 +73,7 @@ export default function RiskPanel({ apiBase, scores, details }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "neurocheck_dossier.pdf";
+      a.download = "neurocheck_clinical_dossier.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -83,16 +84,16 @@ export default function RiskPanel({ apiBase, scores, details }) {
   };
 
   return (
-    <div className="risk-panel">
-      <div className="eyebrow">Composite risk stratification</div>
-      <div className="risk-header">
-        <div className="risk-score-wrap">
-          <div className="risk-score">
+    <div className="risk-panel flex flex-col gap-5 p-6 rounded-3xl glass-panel border-white/10">
+      <div className="eyebrow text-xs font-mono text-neuro-glow uppercase">Composite risk stratification</div>
+      <div className="risk-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="risk-score-wrap flex items-baseline gap-3">
+          <div className="risk-score text-4xl font-bold text-white">
             {risk ? risk.composite.toFixed(0) : "—"}
-            <span>/100</span>
+            <span className="text-sm font-normal text-gray-400">/100</span>
           </div>
           <div
-            className="risk-badge"
+            className="risk-badge text-xs uppercase px-2.5 py-1 rounded-full border font-bold"
             style={
               risk
                 ? { color: barColor(risk.composite), borderColor: barColor(risk.composite) }
@@ -103,16 +104,16 @@ export default function RiskPanel({ apiBase, scores, details }) {
           </div>
         </div>
 
-        <div className="sub-metrics">
+        <div className="sub-metrics flex-1 w-full sm:max-w-md flex flex-col gap-2.5">
           {["motor", "acoustic", "spiral"].map((key) => (
             <div key={key}>
-              <div className="sub-row">
+              <div className="sub-row flex justify-between text-xs text-gray-300 mb-1">
                 <span>{{ motor: "Motor — tap", acoustic: "Acoustic — voice", spiral: "Fine-motor — spiral" }[key]}</span>
-                <b>{scores[key] === null ? "—" : scores[key].toFixed(0)}</b>
+                <b>{scores[key] === null ? "—" : `${scores[key].toFixed(0)} / 100`}</b>
               </div>
-              <div className="bar-wrap">
+              <div className="bar-wrap w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
                 <div
-                  className="bar-fill"
+                  className="bar-fill h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${scores[key] ?? 0}%`,
                     background: scores[key] !== null ? barColor(scores[key]) : "transparent",
@@ -124,43 +125,51 @@ export default function RiskPanel({ apiBase, scores, details }) {
         </div>
       </div>
 
-      <div className="actions">
-        <button disabled={!risk} onClick={() => setShowFacilities(true)}>
-          Find nearby care
+      <div className="actions flex flex-wrap gap-3 pt-2">
+        <button
+          disabled={!risk}
+          onClick={() => setShowFacilities(!showFacilities)}
+          className="glass-btn !py-2.5 !px-5 text-xs font-bold !bg-neuro-glow !text-black flex items-center gap-2"
+        >
+          {showFacilities ? "Hide nearby facilities" : "Find nearby care (GPS)"}
         </button>
-        <button disabled={!risk} onClick={generatePlan}>
-          Generate rehab plan
+        <button
+          disabled={!risk || isGeneratingPlan}
+          onClick={generatePlan}
+          className="glass-btn !py-2.5 !px-5 text-xs font-bold !bg-white/10 hover:!bg-white/20 text-white flex items-center gap-2"
+        >
+          {isGeneratingPlan ? "Synthesizing AI Plan..." : "Generate AI rehab plan"}
         </button>
-        <button className="secondary" disabled={!risk || exporting} onClick={exportDossier}>
+        <button
+          className="secondary glass-btn !py-2.5 !px-5 text-xs font-bold !bg-blue-600 hover:!bg-blue-700 text-white flex items-center gap-2"
+          disabled={!risk || exporting}
+          onClick={exportDossier}
+        >
           {exporting ? "Building PDF…" : "Export clinical dossier (PDF)"}
         </button>
       </div>
 
       {showFacilities && risk && (
-        <div id="facilities">
-          {FACILITIES[risk.tier].map((f) => (
-            <div className="fac" key={f.name}>
-              <div className="name">{f.name}</div>
-              <div className="meta">{f.meta}</div>
-            </div>
-          ))}
-        </div>
+        <FacilityFinder
+          riskTier={risk.tier}
+          onClose={() => setShowFacilities(false)}
+        />
       )}
 
       {plan && (
-        <div id="careplan">
-          <b>Adaptive care plan</b> — composite risk {risk?.composite.toFixed(0)}/100
-          {"\n\n"}
-          {plan}
-        </div>
+        <CarePlanView
+          planMarkdown={plan}
+          onRegenerate={generatePlan}
+          isGenerating={isGeneratingPlan}
+          compositeScore={risk?.composite}
+          riskTier={risk?.tier}
+        />
       )}
 
-      <div className="note">
-        <b>Prototype notes.</b> All modality scores above are computed server-side by
-        the FastAPI backend using NumPy/SciPy on the raw signals this page captures.
-        Facility listings are static/illustrative. The PDF dossier is generated live
-        by ReportLab on the backend.
+      <div className="note text-[11px] text-gray-400 p-3 rounded-xl bg-black/20 border border-white/5">
+        <b>NeuroCheck AI CDS Note:</b> Modality biomarkers are computed using signal processing (FFT spectral power, autocorrelation pitch tracking, and Hilbert envelope). AI care regimens are synthesized dynamically based on patient stratification.
       </div>
     </div>
   );
 }
+

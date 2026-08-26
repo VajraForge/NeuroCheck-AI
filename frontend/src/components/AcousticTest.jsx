@@ -3,6 +3,7 @@ import { ArrowLeft, Mic, CheckCircle2, AlertTriangle, Sparkles, StopCircle } fro
 import { encode16BitPCM } from "../utils/wavEncoder";
 import ClinicalErrorBoundary from "./ClinicalErrorBoundary";
 import TaskStatusMonitor from "./TaskStatusMonitor";
+import { AcousticWaveformChart } from "./BiomarkerCharts";
 
 export default function AcousticTest({ onBack, onResult, apiBase = "http://localhost:8000" }) {
   const [status, setStatus] = useState("idle"); // idle | recording | analyzing | done | error
@@ -194,6 +195,14 @@ export default function AcousticTest({ onBack, onResult, apiBase = "http://local
                   <p className="text-gray-400 text-xs">Acoustic Dysphonia Risk</p>
                   <p className="text-3xl font-bold text-yellow-400">{metrics.risk_score || 25} / 100</p>
                 </div>
+              </div>
+
+              <div className="w-full max-w-md mb-4">
+                <AcousticWaveformChart
+                  meanF0={metrics.mean_f0_hz || metrics.fundamental_frequency_hz || 135}
+                  jitterPct={metrics.jitter_pct || metrics.jitter_percent || 1.1}
+                  shimmerPct={metrics.shimmer_pct || 1.9}
+                />
               </div>
 
               {metrics.care_engine_notes && (

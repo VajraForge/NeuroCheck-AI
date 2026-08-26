@@ -4,6 +4,7 @@ import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { ArrowLeft, Activity, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
 import ClinicalErrorBoundary from './ClinicalErrorBoundary';
 import TaskStatusMonitor from './TaskStatusMonitor';
+import { TapDecayChart } from './BiomarkerCharts';
 
 export default function KinematicTest({ onBack, onResult }) {
   const webcamRef = useRef(null);
@@ -290,6 +291,14 @@ export default function KinematicTest({ onBack, onResult }) {
                   <p className="text-gray-400 text-xs">Motor Risk Score</p>
                   <p className="text-3xl font-bold text-yellow-400">{result.risk_score || 0} / 100</p>
                 </div>
+              </div>
+
+              <div className="w-full max-w-md mb-4">
+                <TapDecayChart
+                  tapRate={result.dominant_frequency_hz || result.tap_rate_hz || 3.2}
+                  amplitudeDecay={result.amplitude_decay_pct || (result.risk_score > 50 ? 35 : 12)}
+                  rhythmCv={result.rhythm_cv || 0.08}
+                />
               </div>
 
               {result.care_engine_notes && (

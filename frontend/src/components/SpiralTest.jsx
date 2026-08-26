@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ArrowLeft, Target, CheckCircle2, RotateCcw, AlertTriangle, Sparkles } from 'lucide-react';
 import ClinicalErrorBoundary from './ClinicalErrorBoundary';
 import TaskStatusMonitor from './TaskStatusMonitor';
+import { SpiralTremorSpectrumChart } from './BiomarkerCharts';
 
 export default function SpiralTest({ onBack, onResult, apiBase = "http://localhost:8000" }) {
   const canvasRef = useRef(null);
@@ -242,6 +243,14 @@ export default function SpiralTest({ onBack, onResult, apiBase = "http://localho
                   <p className="text-gray-400 text-xs">Fine-Motor Dysmetria Risk</p>
                   <p className="text-3xl font-bold text-yellow-400">{result.risk_score || 35} / 100</p>
                 </div>
+              </div>
+
+              <div className="w-full mb-4">
+                <SpiralTremorSpectrumChart
+                  dominantTremorHz={result.dominant_tremor_hz || 5.4}
+                  rmsDevPx={result.rms_deviation_px || result.mean_radial_deviation_px || 11.5}
+                  reversals={result.velocity_reversals || 2}
+                />
               </div>
 
               {result.care_engine_notes && (

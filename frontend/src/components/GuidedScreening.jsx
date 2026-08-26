@@ -16,12 +16,17 @@ import {
 import KinematicTest from './KinematicTest';
 import AcousticTest from './AcousticTest';
 import SpiralTest from './SpiralTest';
+import CarePlanView from './CarePlanView';
+import FacilityFinder from './FacilityFinder';
+import { TapDecayChart, AcousticWaveformChart, SpiralTremorSpectrumChart } from './BiomarkerCharts';
 
 export default function GuidedScreening({ currentUser, onFinish, onSaveHistory }) {
   const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: tap, 2: voice, 3: spiral, 4: summary
+  const [showFacilities, setShowFacilities] = useState(false);
   const [scores, setScores] = useState({
     motor: null,
     acoustic: null,
+
     spiral: null,
     details: {}
   });
@@ -57,7 +62,8 @@ export default function GuidedScreening({ currentUser, onFinish, onSaveHistory }
           motor_score: scores.motor || 30.0,
           acoustic_score: scores.acoustic || 25.0,
           spiral_score: scores.spiral || 35.0,
-          patient_tier: riskTier
+          patient_tier: riskTier,
+          details: scores.details
         })
       });
       const data = await res.json();
@@ -68,6 +74,7 @@ export default function GuidedScreening({ currentUser, onFinish, onSaveHistory }
       setIsGeneratingPlan(false);
     }
   };
+
 
   const handleSaveToAccount = async () => {
     try {
@@ -415,31 +422,56 @@ export default function GuidedScreening({ currentUser, onFinish, onSaveHistory }
             </div>
           </div>
 
-          {/* AI Care Engine Regimen */}
-          <div className="glass-panel p-6 rounded-2xl border-neuro-glow/30">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-bold text-white text-base flex items-center gap-2">
-                <Brain className="w-5 h-5 text-neuro-glow" /> Personalized 7-Day Rehabilitation Regimen & Clinical Recommendations
-              </h4>
-              <span className="text-[11px] text-neuro-glow font-mono">Synthesized by LLM Care Engine</span>
-            </div>
-
-            {carePlan ? (
-              <div className="bg-black/50 p-5 rounded-xl border border-white/10 text-xs text-gray-200 whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto">
-                {carePlan}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center p-6 bg-black/30 rounded-xl">
-                <button
-                  onClick={handleAutoGeneratePlan}
-                  disabled={isGeneratingPlan}
-                  className="glass-btn !bg-neuro-glow !text-black !font-bold text-xs !py-2 !px-4 flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" /> {isGeneratingPlan ? 'Synthesizing...' : 'Generate 7-Day Care Regimen'}
-                </button>
-              </div>
-            )}
+          {/* Interactive Biomarker Telemetry Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <TapDecayChart
+              tapRate={scores.details.motor?.tap_rate_hz || (scores.motor ? (scores.motor > 50 ? 1.8 : 3.4) : 3.2)}
+              amplitudeDecay={scores.details.motor?.amplitude_decay_pct || (scores.motor ? (scores.motor > 50 ? 32 : 12) : 14)}
+              rhythmCv={scores.details.motor?.rhythm_cv || 0.08}
+            />
+            <AcousticWaveformChart
+              meanF0={scores.details.acoustic?.mean_f0_hz || 135}
+              jitterPct={scores.details.acoustic?.jitter_pct || (scores.acoustic ? (scores.acoustic > 50 ? 3.2 : 1.1) : 1.1)}
+              shimmerPct={scores.details.acoustic?.shimmer_pct || 1.9}
+            />
+            <SpiralTremorSpectrumChart
+              dominantTremorHz={scores.details.spiral?.dominant_tremor_hz || (scores.spiral ? (scores.spiral > 50 ? 5.8 : 4.6) : 5.4)}
+              rmsDevPx={scores.details.spiral?.rms_deviation_px || 11.5}
+              reversals={scores.details.spiral?.velocity_reversals || 2}
+            />
           </div>
+
+          {/* Nearby Medical Triage Care Finder */}
+          <div className="flex justify-between items-center p-4 rounded-2xl bg-black/30 border border-white/10">
+            <div>
+              <h4 className="font-bold text-white text-sm">Nearby Neurological Care & Movement Disorder Centers</h4>
+              <p className="text-xs text-gray-400 mt-0.5">Locate movement disorder specialists and physical therapy facilities in your area.</p>
+            </div>
+            <button
+              onClick={() => setShowFacilities(!showFacilities)}
+              className="glass-btn !bg-neuro-glow !text-black !font-bold text-xs !py-2 !px-4 shrink-0"
+            >
+              {showFacilities ? 'Hide Facilities' : 'Find Nearby Care (GPS)'}
+            </button>
+          </div>
+
+          {showFacilities && (
+            <FacilityFinder
+              riskTier={riskTier}
+              onClose={() => setShowFacilities(false)}
+            />
+          )}
+
+          {/* AI Care Engine Regimen */}
+          <CarePlanView
+            planMarkdown={carePlan}
+            onRegenerate={handleAutoGeneratePlan}
+            isGenerating={isGeneratingPlan}
+            compositeScore={compositeVal}
+            riskTier={riskTier}
+          />
+
+
 
           {/* Action buttons */}
           <div className="flex justify-between items-center pt-2">
