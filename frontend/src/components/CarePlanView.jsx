@@ -1,14 +1,60 @@
-import React, { useState } from 'react';
-import { Brain, Sparkles, Copy, Check, Printer, FileDown, ShieldCheck, Dumbbell, Waves, Activity, AlertTriangle } from 'lucide-react';
+ï»¿import React, { useState, useEffect } from 'react';
+import { Brain, Sparkles, Copy, Check, Printer, ShieldCheck, Play, Square, Volume2 } from 'lucide-react';
 
 export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating = false, compositeScore, riskTier }) {
   const [copied, setCopied] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Stop speech when component unmounts
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const handleCopy = () => {
     if (!planMarkdown) return;
     navigator.clipboard.writeText(planMarkdown);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const toggleSpeech = () => {
+    if (!window.speechSynthesis) {
+      alert("Text-to-Speech is not supported in this browser.");
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Clean markdown characters for speech
+    const cleanText = planMarkdown
+      .replace(/[\*#_]/g, '')
+      .replace(/\n\n/g, '. ')
+      .replace(/-\s/g, ' ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.95; // Slightly slower for elderly/patients
+    utterance.pitch = 1;
+    
+    // Attempt to use a female or friendly voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.cancel(); // clear any previous
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
   };
 
   const handlePrint = () => {
@@ -89,12 +135,28 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
               </span>
             </div>
             <div className="text-[10px] text-gray-400">
-              Calibrated for {riskTier ? riskTier.toUpperCase() : 'SCREENING'} Tier ({compositeScore ? compositeScore.toFixed(0) : '—'}/100)
+              Calibrated for {riskTier ? riskTier.toUpperCase() : 'SCREENING'} Tier ({compositeScore ? compositeScore.toFixed(0) : '-'}/100)
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={toggleSpeech}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+              isSpeaking 
+                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
+                : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30'
+            }`}
+            title={isSpeaking ? "Stop Reading" : "Read Aloud"}
+          >
+            {isSpeaking ? (
+              <><Square className="w-3.5 h-3.5 fill-current" /> Stop</>
+            ) : (
+              <><Volume2 className="w-3.5 h-3.5" /> Read Aloud</>
+            )}
+          </button>
+
           <button
             onClick={handleCopy}
             className="px-3 py-1.5 rounded-lg glass-panel text-xs text-gray-300 hover:text-white flex items-center gap-1.5 transition"
@@ -103,6 +165,7 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
             {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
+          
           <button
             onClick={handlePrint}
             className="px-3 py-1.5 rounded-lg glass-panel text-xs text-gray-300 hover:text-white flex items-center gap-1.5 transition"
@@ -110,6 +173,7 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
           >
             <Printer className="w-3.5 h-3.5" /> Print
           </button>
+          
           {onRegenerate && (
             <button
               onClick={onRegenerate}
