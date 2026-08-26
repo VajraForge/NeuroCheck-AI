@@ -33,7 +33,6 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
       return;
     }
 
-    // Clean markdown characters for speech
     const cleanText = planMarkdown
       .replace(/[\*#_]/g, '')
       .replace(/\n\n/g, '. ')
@@ -41,10 +40,9 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
       .trim();
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.95; // Slightly slower for elderly/patients
+    utterance.rate = 0.95;
     utterance.pitch = 1;
     
-    // Attempt to use a female or friendly voice if available
     const voices = window.speechSynthesis.getVoices();
     const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
     if (preferredVoice) utterance.voice = preferredVoice;
@@ -52,7 +50,7 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
-    window.speechSynthesis.cancel(); // clear any previous
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
   };
@@ -86,13 +84,13 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
 
   if (isGenerating) {
     return (
-      <div className="p-8 rounded-2xl bg-black/40 border border-neuro-glow/40 flex flex-col items-center justify-center text-center gap-3">
-        <div className="w-10 h-10 rounded-full border-2 border-neuro-glow border-t-transparent animate-spin" />
-        <p className="text-sm font-bold text-white flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-neuro-glow animate-pulse" />
+      <div className="p-8 rounded-2xl bg-white border border-sky-200 shadow-sm flex flex-col items-center justify-center text-center gap-3">
+        <div className="w-10 h-10 rounded-full border-3 border-sky-600 border-t-transparent animate-spin" />
+        <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-sky-600 animate-pulse" />
           Synthesizing Personalized 7-Day Neuro-Rehabilitation Plan...
         </p>
-        <p className="text-xs text-gray-400 max-w-md">
+        <p className="text-xs text-slate-500 max-w-md">
           Analyzing tap kinematics, voice perturbation, and Archimedes spatial vectors to calibrate exercise intensity.
         </p>
       </div>
@@ -101,16 +99,16 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
 
   if (!planMarkdown) {
     return (
-      <div className="p-8 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center text-center gap-3">
-        <Brain className="w-10 h-10 text-neuro-glow/60" />
-        <h4 className="font-bold text-sm text-white">No Care Plan Synthesized Yet</h4>
-        <p className="text-xs text-gray-400 max-w-md">
+      <div className="p-8 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center gap-3">
+        <Brain className="w-10 h-10 text-sky-600/60" />
+        <h4 className="font-bold text-sm text-slate-900">No Care Plan Synthesized Yet</h4>
+        <p className="text-xs text-slate-500 max-w-md">
           Generate an adaptive 7-day physical therapy, vocal stability, and dual-task coordination protocol tailored to your screening metrics.
         </p>
         {onRegenerate && (
           <button
             onClick={onRegenerate}
-            className="glass-btn !bg-neuro-glow !text-black !font-bold text-xs !py-2 !px-4 mt-2 flex items-center gap-2"
+            className="glass-btn !bg-sky-600 hover:!bg-sky-700 !text-white !font-bold text-xs !py-2 !px-4 mt-2 flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" /> Synthesize AI Care Plan
           </button>
@@ -122,19 +120,19 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
   return (
     <div className="flex flex-col gap-4">
       {/* Header bar */}
-      <div className="flex flex-wrap justify-between items-center gap-2 p-3.5 bg-neuro-card/80 border border-white/10 rounded-2xl">
+      <div className="flex flex-wrap justify-between items-center gap-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-neuro-glow/10 border border-neuro-glow/40 flex items-center justify-center text-neuro-glow">
+          <div className="w-8 h-8 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-700">
             <Brain className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white flex items-center gap-2">
+            <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
               Personalized 7-Day Clinical Regimen
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-neuro-glow/20 text-neuro-glow border border-neuro-glow/30 font-mono">
-                AI Synthesized
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 font-mono font-bold">
+                Gemini LLM Synthesized
               </span>
             </div>
-            <div className="text-[10px] text-gray-400">
+            <div className="text-[10px] text-slate-500">
               Calibrated for {riskTier ? riskTier.toUpperCase() : 'SCREENING'} Tier ({compositeScore ? compositeScore.toFixed(0) : '-'}/100)
             </div>
           </div>
@@ -145,8 +143,8 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
             onClick={toggleSpeech}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
               isSpeaking 
-                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
-                : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30'
+                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100' 
+                : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
             }`}
             title={isSpeaking ? "Stop Reading" : "Read Aloud"}
           >
@@ -159,16 +157,16 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
 
           <button
             onClick={handleCopy}
-            className="px-3 py-1.5 rounded-lg glass-panel text-xs text-gray-300 hover:text-white flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition shadow-sm"
             title="Copy Markdown"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
           
           <button
             onClick={handlePrint}
-            className="px-3 py-1.5 rounded-lg glass-panel text-xs text-gray-300 hover:text-white flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition shadow-sm"
             title="Print Regimen"
           >
             <Printer className="w-3.5 h-3.5" /> Print
@@ -177,7 +175,7 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
           {onRegenerate && (
             <button
               onClick={onRegenerate}
-              className="px-3 py-1.5 rounded-lg bg-neuro-glow/20 hover:bg-neuro-glow/30 border border-neuro-glow/40 text-xs text-neuro-glow font-bold flex items-center gap-1.5 transition"
+              className="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs text-sky-700 font-bold flex items-center gap-1.5 transition"
             >
               <Sparkles className="w-3.5 h-3.5" /> Re-synthesize
             </button>
@@ -186,13 +184,13 @@ export default function CarePlanView({ planMarkdown, onRegenerate, isGenerating 
       </div>
 
       {/* Formatted Markdown Content */}
-      <div className="bg-black/60 p-5 md:p-6 rounded-2xl border border-white/10 text-xs text-gray-200 leading-relaxed font-sans max-h-[500px] overflow-y-auto whitespace-pre-wrap selection:bg-neuro-glow selection:text-black">
+      <div className="bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans max-h-[500px] overflow-y-auto whitespace-pre-wrap selection:bg-sky-100">
         {planMarkdown}
       </div>
 
       {/* Safety Notice Footer */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5 text-[11px] text-gray-400">
-        <ShieldCheck className="w-4 h-4 text-green-400 shrink-0" />
+      <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 font-medium">
+        <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
         <span>Clinical Guidance Note: This AI-synthesized care plan provides structured exercise recommendations based on non-invasive biomarkers. Consult your movement disorder specialist before beginning high-intensity drills.</span>
       </div>
     </div>

@@ -1,21 +1,20 @@
-import React from 'react';
-import { Activity, Waves, Target, BarChart3 } from 'lucide-react';
+﻿import React from 'react';
+import { Activity, Waves, Target } from 'lucide-react';
 
 /**
- * Visualizes Finger-Tap Rate Decay & Rhythm Variability over time
+ * Visualizes Finger-Tap Rate Decay and Fatigue Curve (Kinematic Test)
  */
-export function TapDecayChart({ tapRate = 3.2, amplitudeDecay = 14, rhythmCv = 0.08 }) {
-  // Generate a realistic 10-second time series curve based on actual metrics
-  const points = [];
+export function TapDecayChart({ tapRate = 3.2, amplitudeDecay = 12, rhythmCv = 0.08 }) {
+  // Generate simulated decay points over 10 seconds
   const totalSeconds = 10;
-  const initialSpeed = tapRate * 1.15;
-  const decayFactor = (amplitudeDecay / 100) * 0.4;
+  const points = [];
+  const startSpeed = tapRate * 1.15;
+  const endSpeed = tapRate * (1 - (amplitudeDecay / 100));
 
-  for (let s = 0; s <= totalSeconds; s += 0.5) {
-    // Speed gradually decays + slight rhythm CV jitter
-    const jitter = (Math.sin(s * 3.5) * rhythmCv * 4);
-    const speed = Math.max(0.8, (initialSpeed * Math.exp(-decayFactor * (s / totalSeconds))) + jitter);
-    points.push({ time: s, speed: parseFloat(speed.toFixed(2)) });
+  for (let s = 0; s <= totalSeconds; s += 1) {
+    const decayFactor = (s / totalSeconds);
+    const speed = startSpeed - (startSpeed - endSpeed) * decayFactor + (Math.sin(s * 1.5) * (rhythmCv * 2));
+    points.push({ s, speed: Math.max(0.5, parseFloat(speed.toFixed(2))) });
   }
 
   const maxSpeed = Math.max(...points.map(p => p.speed), 4.5);
@@ -30,25 +29,25 @@ export function TapDecayChart({ tapRate = 3.2, amplitudeDecay = 14, rhythmCv = 0
   }).join(' ');
 
   return (
-    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col gap-2">
+    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-2">
       <div className="flex justify-between items-center text-xs">
-        <span className="font-bold text-white flex items-center gap-1.5">
-          <Activity className="w-3.5 h-3.5 text-neuro-glow" /> Tap Kinematics: Fatigue & Decay Curve
+        <span className="font-bold text-slate-800 flex items-center gap-1.5">
+          <Activity className="w-3.5 h-3.5 text-sky-600" /> Tap Kinematics: Fatigue Curve
         </span>
-        <span className="font-mono text-[10px] text-neuro-glow">{amplitudeDecay}% Amplitude Decay</span>
+        <span className="font-mono text-[10px] text-sky-700 font-semibold bg-sky-50 px-2 py-0.5 rounded border border-sky-200">{amplitudeDecay}% Fatigue Decay</span>
       </div>
 
       <div className="w-full flex justify-center">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28 overflow-visible">
           {/* Grid lines */}
-          <line x1={padding} y1={padding} x2={width - padding} y2={padding} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
-          <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
-          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.2)" />
+          <line x1={padding} y1={padding} x2={width - padding} y2={padding} stroke="#E2E8F0" strokeDasharray="3 3" />
+          <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="#E2E8F0" strokeDasharray="3 3" />
+          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#CBD5E1" />
 
           {/* Area fill */}
           <polygon
             points={`${padding},${height - padding} ${svgPoints} ${width - padding},${height - padding}`}
-            fill="url(#tapGlowGradient)"
+            fill="url(#tapLightGradient)"
             opacity="0.25"
           />
 
@@ -56,7 +55,7 @@ export function TapDecayChart({ tapRate = 3.2, amplitudeDecay = 14, rhythmCv = 0
           <polyline
             points={svgPoints}
             fill="none"
-            stroke="#00F0FF"
+            stroke="#0284C7"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -65,22 +64,22 @@ export function TapDecayChart({ tapRate = 3.2, amplitudeDecay = 14, rhythmCv = 0
           {/* Start and End Keypoints */}
           {points.length > 0 && (
             <>
-              <circle cx={padding} cy={height - padding - ((points[0].speed / maxSpeed) * (height - padding * 2))} r="3.5" fill="#00F0FF" />
-              <circle cx={width - padding} cy={height - padding - ((points[points.length - 1].speed / maxSpeed) * (height - padding * 2))} r="3.5" fill="#FF0055" />
+              <circle cx={padding} cy={height - padding - ((points[0].speed / maxSpeed) * (height - padding * 2))} r="4" fill="#0284C7" stroke="#FFF" strokeWidth="1.5" />
+              <circle cx={width - padding} cy={height - padding - ((points[points.length - 1].speed / maxSpeed) * (height - padding * 2))} r="4" fill="#E11D48" stroke="#FFF" strokeWidth="1.5" />
             </>
           )}
 
           <defs>
-            <linearGradient id="tapGlowGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#00F0FF" stopOpacity="0.0" />
+            <linearGradient id="tapLightGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0284C7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#0284C7" stopOpacity="0.0" />
             </linearGradient>
           </defs>
         </svg>
       </div>
 
-      <div className="flex justify-between text-[10px] text-gray-400 font-mono px-1">
-        <span>0s (Baseline: {points[0]?.speed} Hz)</span>
+      <div className="flex justify-between text-[10px] text-slate-500 font-mono px-1">
+        <span>0s (Init: {points[0]?.speed} Hz)</span>
         <span>5s</span>
         <span>10s (Fatigue: {points[points.length - 1]?.speed} Hz)</span>
       </div>
@@ -101,28 +100,28 @@ export function AcousticWaveformChart({ meanF0 = 135, jitterPct = 1.1, shimmerPc
   });
 
   return (
-    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col gap-2">
+    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-2">
       <div className="flex justify-between items-center text-xs">
-        <span className="font-bold text-white flex items-center gap-1.5">
-          <Waves className="w-3.5 h-3.5 text-neuro-accent" /> Phonation Harmonic Stability & Jitter
+        <span className="font-bold text-slate-800 flex items-center gap-1.5">
+          <Waves className="w-3.5 h-3.5 text-teal-600" /> Phonation Harmonic Stability
         </span>
-        <span className="font-mono text-[10px] text-neuro-accent">{jitterPct}% Jitter | {shimmerPct}% Shimmer</span>
+        <span className="font-mono text-[10px] text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">{jitterPct}% Jitter | {shimmerPct}% Shimmer</span>
       </div>
 
-      <div className="h-28 flex items-center justify-between gap-1 px-2 bg-neuro-dark/40 rounded-xl border border-white/5">
+      <div className="h-28 flex items-center justify-between gap-1 px-2 bg-slate-50 rounded-xl border border-slate-200">
         {dataBars.map((val, idx) => (
           <div
             key={idx}
-            className="w-full bg-gradient-to-t from-neuro-accent to-neuro-glow rounded-full transition-all duration-300"
+            className="w-full bg-gradient-to-t from-teal-500 to-sky-400 rounded-full transition-all duration-300"
             style={{
               height: `${Math.round(val * 100)}%`,
-              opacity: 0.5 + val * 0.5
+              opacity: 0.65 + val * 0.35
             }}
           />
         ))}
       </div>
 
-      <div className="flex justify-between text-[10px] text-gray-400 font-mono px-1">
+      <div className="flex justify-between text-[10px] text-slate-500 font-mono px-1">
         <span>Mean F0: {meanF0.toFixed(0)} Hz</span>
         <span>Glottal Harmonic Profile</span>
         <span>HNR: {(20 - jitterPct * 2).toFixed(1)} dB</span>
@@ -159,12 +158,12 @@ export function SpiralTremorSpectrumChart({ dominantTremorHz = 5.4, rmsDevPx = 1
   const peakX = padding + ((dominantTremorHz - 1) / 13) * (width - padding * 2);
 
   return (
-    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col gap-2">
+    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-2">
       <div className="flex justify-between items-center text-xs">
-        <span className="font-bold text-white flex items-center gap-1.5">
-          <Target className="w-3.5 h-3.5 text-yellow-400" /> FFT Spectral Tremor Decomposition
+        <span className="font-bold text-slate-800 flex items-center gap-1.5">
+          <Target className="w-3.5 h-3.5 text-amber-600" /> FFT Spectral Tremor Spectrum
         </span>
-        <span className="font-mono text-[10px] text-yellow-300 font-bold">Peak: {dominantTremorHz} Hz</span>
+        <span className="font-mono text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Peak: {dominantTremorHz} Hz</span>
       </div>
 
       <div className="w-full flex justify-center relative">
@@ -175,44 +174,44 @@ export function SpiralTremorSpectrumChart({ dominantTremorHz = 5.4, rmsDevPx = 1
             y={padding}
             width={((3) / 13) * (width - padding * 2)}
             height={height - padding * 2}
-            fill="rgba(255, 0, 85, 0.12)"
+            fill="rgba(225, 29, 72, 0.08)"
             rx="4"
           />
 
-          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.2)" />
+          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#CBD5E1" />
 
           {/* Area fill */}
           <polygon
             points={`${padding},${height - padding} ${svgPoints} ${width - padding},${height - padding}`}
-            fill="url(#spiralGlowGradient)"
-            opacity="0.35"
+            fill="url(#spiralLightGradient)"
+            opacity="0.25"
           />
 
           {/* Curve */}
           <polyline
             points={svgPoints}
             fill="none"
-            stroke="#FBBF24"
+            stroke="#D97706"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
           {/* Peak Indicator Marker */}
-          <circle cx={peakX} cy={height - padding - ((bins.find(b => Math.abs(b.hz - dominantTremorHz) < 0.3)?.power || 0.8) / maxPower) * (height - padding * 2)} r="4.5" fill="#FF0055" stroke="#FFF" strokeWidth="1.5" />
+          <circle cx={peakX} cy={height - padding - ((bins.find(b => Math.abs(b.hz - dominantTremorHz) < 0.3)?.power || 0.8) / maxPower) * (height - padding * 2)} r="4.5" fill="#E11D48" stroke="#FFF" strokeWidth="1.5" />
 
           <defs>
-            <linearGradient id="spiralGlowGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FBBF24" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#FBBF24" stopOpacity="0.0" />
+            <linearGradient id="spiralLightGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#D97706" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#D97706" stopOpacity="0.0" />
             </linearGradient>
           </defs>
         </svg>
       </div>
 
-      <div className="flex justify-between text-[10px] text-gray-400 font-mono px-1">
+      <div className="flex justify-between text-[10px] text-slate-500 font-mono px-1">
         <span>1 Hz</span>
-        <span className="text-red-400 font-bold">? 4�7 Hz (Movement Tremor Zone)</span>
+        <span className="text-rose-600 font-semibold">● 4-7 Hz (Tremor Zone)</span>
         <span>14 Hz</span>
       </div>
     </div>
