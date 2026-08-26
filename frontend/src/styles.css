@@ -23,3 +23,33 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-neuro-glow to-neuro-accent;
   }
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .glass-panel, .glass-btn, .bg-neuro-card, .bg-black {
+    background: transparent !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+  .gradient-text {
+    background: none !important;
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+  }
+  /* Hide unnecessary elements during print */
+  button, nav, .no-print {
+    display: none !important;
+  }
+  /* Ensure charts print correctly */
+  svg {
+    max-width: 100% !important;
+  }
+  /* Break pages correctly */
+  .page-break-before {
+    page-break-before: always;
+  }
+}

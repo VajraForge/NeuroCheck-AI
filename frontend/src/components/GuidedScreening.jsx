@@ -101,29 +101,11 @@ export default function GuidedScreening({ currentUser, onFinish, onSaveHistory }
     }
   };
 
-  const exportDossier = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/export/dossier", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          motor: scores.motor || 30.0,
-          acoustic: scores.acoustic || 25.0,
-          spiral: scores.spiral || 35.0,
-          tap_detail: scores.details.motor || { tap_rate_hz: 3.2, amplitude_decay_pct: 12, rhythm_cv: 0.08, risk_score: 30 },
-          acoustic_detail: scores.details.acoustic || { mean_f0_hz: 135, jitter_pct: 1.1, shimmer_pct: 1.9, risk_score: 25 },
-          spiral_detail: scores.details.spiral || { rms_deviation_px: 11.5, velocity_reversals: 2, dominant_tremor_hz: 5.4, risk_score: 35 }
-        })
-      });
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `neurocheck_report_${currentUser?.username || 'patient'}.pdf`;
-      a.click();
-    } catch (e) {
-      alert("Failed to export: " + e.message);
-    }
+  const exportDossier = () => {
+    // Option 1: Native High-Fidelity PDF Export
+    // Using the browser's native print engine with @media print CSS to generate
+    // a beautiful PDF that includes the SVG Biomarker Charts and the AI Care Plan.
+    window.print();
   };
 
   return (
