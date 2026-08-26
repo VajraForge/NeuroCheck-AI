@@ -1,0 +1,13 @@
+# Environment & Cache
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+*.db
+.env
+
+# Private Project Report (excluded from Git)
+PROJECT_REPORT.md
+PROJECT_REPORT.pdf
+*.pdf
